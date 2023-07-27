@@ -1,0 +1,5 @@
+datasets:
+  - name: dataset_poke_items_attribute
+    uri: s3://cjmm-datalake-raw/poke_api/items_attribute/*.json
+  - name: dataset_poke_items
+    uri: s3://cjmm-datalake-raw/poke_api/items/*.json

@@ -1,0 +1,75 @@
+default:
+  default_args:
+    owner: "default_owner"
+    start_date: '2023-07-27'
+    retries: 1
+    retry_delay_sec: 300
+  concurrency: 1
+  max_active_runs: 1
+  dagrun_timeout_sec: 600
+  default_view: "tree"
+  orientation: "LR"
+
+download_data_api_dataset_producer_dag:
+  description: "Example DAG producer custom config datasets"
+  schedule_interval: "0 5 * * *"
+  task_groups:
+    extract_data:
+      tooltip: "this is a task group"
+    save_data:
+      tooltip: "this is a task group"
+  tasks:
+    start_process:
+      operator: airflow.operators.dummy.DummyOperator
+    get_items_data:
+      operator: airflow.providers.http.operators.http.SimpleHttpOperator
+      method: "GET"
+      http_conn_id: "poke_api"
+      endpoint: "item/1"
+      task_group_name: extract_data
+      dependencies: [start_process]
+    save_items_data:
+      operator: airflow.providers.amazon.aws.operators.s3.S3CreateObjectOperator
+      aws_conn_id: aws_default
+      s3_bucket: cjmm-datalake-raw
+      s3_key: "poke_api/item/data_{{ ts }}.json"
+      data: "{{ ti.xcom_pull(task_ids='get_items_data') }}"
+      dependencies: [get_items_data]
+      task_group_name: save_data
+      outlets:
+        file: /opt/airflow/dags/dags_config/datasets_config.yml
+        datasets: ['dataset_poke_items']
+    get_items_attribute_data:
+      operator: airflow.providers.http.operators.http.SimpleHttpOperator
+      method: "GET"
+      http_conn_id: "poke_api"
+      endpoint: "item-attribute/1"
+      dependencies: [start_process]
+      task_group_name: extract_data
+    save_items_attribute_data:
+        operator: airflow.providers.amazon.aws.operators.s3.S3CreateObjectOperator
+        aws_conn_id: aws_default
+        s3_bucket: cjmm-datalake-raw
+        s3_key: "poke_api/items_attribute/data_{{ ts }}.json"
+        data: "{{ ti.xcom_pull(task_ids='get_items_attribute_data') }}"
+        dependencies: [get_items_attribute_data]
+        task_group_name: save_data
+        outlets:
+          file: /opt/airflow/dags/dags_config/datasets_config.yml
+          datasets: ['dataset_poke_items_attribute']
+
+process_data_api_dataset_consumer_dag:
+  description: "Example DAG consumer custom config datasets"
+  schedule:
+    file: /opt/airflow/dags/dags_config/datasets_config.yml
+    datasets: ['dataset_poke_items', 'dataset_poke_items_attribute']
+  tasks:
+    start_process:
+      operator: airflow.operators.dummy.DummyOperator
+    process_data:
+      operator: airflow.operators.python_operator.PythonOperator
+      python_callable_name: process_data_function
+      python_callable_file: /opt/airflow/dags/process_data.py
+      task_group_name: etl_data
+      provide_context: true
+      dependencies: [start_process]

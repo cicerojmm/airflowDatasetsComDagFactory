@@ -1,0 +1,2 @@
+dag-factory==0.19.0
+pip install 'apache-airflow[amazon]'
