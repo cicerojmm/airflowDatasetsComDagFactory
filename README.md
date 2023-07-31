@@ -1,2 +1,5 @@
-# Exemplo de uma DAG do Airflow Utilizando Datasets Com a Biblioteca DagFactory
-Exemplo de utilização de Datasets (data-aware scheduling) com DAG Factory
+# Example of an Airflow DAG Using Datasets With the DagFactory Library
+Example of using Datasets (data-aware scheduling) with DAG Factory.
+
+Library DAG Factory: https://github.com/ajbosco/dag-factory
+Datasets documentation: https://airflow.apache.org/docs/apache-airflow/stable/authoring-and-scheduling/datasets.html

@@ -13,4 +13,4 @@ def process_data_function():
 
         for s3_file in s3_files:
             file_name = os.path.basename(s3_file)
-            print(f"Arquivo baixado: {file_name}")
+            print(f"Downloaded file: {file_name}")
